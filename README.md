@@ -46,7 +46,7 @@
 
 ## 🖼 Preview
 
-
+![Dork Sniper Preview](./dorksniper.png)
 ---
 
 
