@@ -49,7 +49,4 @@
 
 ---
 
-## 🌐 ¿Dónde usarlo?
-
-Puedes alojar este proyecto en **GitHub Pages** directamente:
 
