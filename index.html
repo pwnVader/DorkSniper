@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DorkSniper</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0d1117;
+            color: #c9d1d9;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .main-container {
+            max-width: 900px;
+            margin: auto;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            color: #58a6ff;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            min-width: 300px;
+            padding: 14px;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            background: #161b22;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 14px 22px;
+            border: none;
+            border-radius: 8px;
+            background: #238636;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #2ea043;
+        }
+
+        .dork-category {
+            margin-top: 30px;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            background: #161b22;
+        }
+
+        .category-header {
+            padding: 12px 20px;
+            background: #21262d;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        .category-content {
+            padding: 15px 20px;
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .dork-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #0d1117;
+            padding: 10px;
+            border-bottom: 1px solid #30363d;
+        }
+
+        .dork-item:last-child {
+            border-bottom: none;
+        }
+
+        .dork-text {
+            flex: 1;
+            font-size: 14px;
+            word-break: break-word;
+            margin-right: 10px;
+        }
+
+        .footer {
+            margin-top: 60px;
+            text-align: center;
+            font-size: 14px;
+            color: #8b949e;
+        }
+
+        .footer a {
+            color: #00ffd5;
+            text-decoration: none;
+            font-weight: bold;
+            text-shadow: 0 0 5px #00ffd5;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #21262d;
+            color: #58a6ff;
+            padding: 10px 20px;
+            border-radius: 6px;
+            box-shadow: 0 0 10px #000;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main-container">
+        <h1>Dork Sniper</h1>
+
+        <div class="input-group">
+            <input type="text" id="domainInput" placeholder="Target (ej: nasa.gov, admin, API_KEY)" />
+            <button onclick="generateDorks()">Generar</button>
+            <button onclick="copyAll()">Copiar Todo</button>
+        </div>
+
+        <div id="dorksOutput"></div>
+
+        <div class="footer">
+            by <span style="color:#c9d1d9; font-weight:500;">pwnVader</span>
+            <span style="margin: 0 8px; color:#444;">|</span>
+            <a href="https://github.com/pwnVader" target="_blank" title="GitHub" style="margin-right: 6px;">
+                <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub"
+                    style="width:18px; filter: invert(70%); vertical-align: middle;">
+            </a>
+            <a href="https://www.linkedin.com/in/jesuspromero/" target="_blank" title="LinkedIn">
+                <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn"
+                    style="width:18px; filter: invert(70%); vertical-align: middle;">
+            </a>
+        </div>
+
+        <div class="notification" id="notification">¡Copiado!</div>
+
+    </div>
+
+    <script>
+        const dorks = [
+            {
+                title: "🔧 Paneles de Administración",
+                queries: [
+                    "site:{domain} intitle:\"admin login\"",
+                    "site:{domain} inurl:/admin",
+                    "site:{domain} inurl:login",
+                    "site:{domain} inurl:dashboard",
+                    "site:{domain} inurl:cpanel"
+                ]
+            },
+            {
+                title: "📦 AWS Buckets y Cloud Storage",
+                queries: [
+                    "site:s3.amazonaws.com {domain}",
+                    "site:storage.googleapis.com {domain}",
+                    "site:{domain} intext:\"bucket\"",
+                    "site:{domain} filetype:json intext:AWS"
+                ]
+            },
+            {
+                title: "📝 Logs y Errores",
+                queries: [
+                    "site:{domain} filetype:log",
+                    "site:{domain} intext:\"Fatal error\"",
+                    "site:{domain} inurl:error.log",
+                    "site:{domain} intext:\"Exception in thread\""
+                ]
+            },
+            {
+                title: "📁 Backups y Archivos Viejos",
+                queries: [
+                    "site:{domain} filetype:bak",
+                    "site:{domain} filetype:old",
+                    "site:{domain} filetype:backup",
+                    "site:{domain} inurl:backup"
+                ]
+            },
+            {
+                title: "🕵️ Archivos Sensibles",
+                queries: [
+                    "site:{domain} filetype:env",
+                    "site:{domain} filetype:sql",
+                    "site:{domain} inurl:wp-config.php",
+                    "site:{domain} inurl:.git"
+                ]
+            },
+            {
+                title: "🗂 Directorios Indexados",
+                queries: [
+                    "site:{domain} intitle:\"index of\"",
+                    "site:{domain} inurl:/ftp",
+                    "site:{domain} inurl:/private",
+                    "site:{domain} inurl:/config"
+                ]
+            },
+            {
+                title: "🔑 Claves y Tokens",
+                queries: [
+                    "site:{domain} intext:\"API_KEY\"",
+                    "site:{domain} intext:\"password\"",
+                    "site:{domain} intext:\"token\""
+                ]
+            },
+            {
+                title: "🧪 Subdominios & Descubrimiento",
+                queries: [
+                    "site:*.{domain} -www",
+                    "inurl:{domain} -www",
+                    "site:{domain} -www"
+                ]
+            },
+            {
+                title: "🧩 Fingerprinting y Tecnologías Usadas",
+                queries: [
+                    "site:{domain} intext:'Powered by WordPress'",
+                    "site:{domain} inurl:wp-content",
+                    "site:{domain} intext:'Drupal'",
+                    "site:{domain} intext:'Joomla'",
+                    "site:{domain} inurl:vendor/phpunit"
+                ]
+            },
+            {
+                title: "🧪 Archivos de Testing & Entornos Dev",
+                queries: [
+                    "site:{domain} inurl:test",
+                    "site:{domain} inurl:dev",
+                    "site:{domain} filetype:yaml",
+                    "site:{domain} filetype:conf"
+                ]
+            },
+            {
+                title: "🔒 Formularios de Login expuestos",
+                queries: [
+                    "site:{domain} intext:'Username:' intext:'Password:'",
+                    "site:{domain} intitle:'Sign in'",
+                    "site:{domain} intitle:'Login Page'",
+                    "site:{domain} inurl:/signin"
+                ]
+            },
+            {
+                title: "🧾 Documentos & Archivos Oficiales",
+                queries: [
+                    "site:{domain} filetype:pdf",
+                    "site:{domain} filetype:doc",
+                    "site:{domain} filetype:xls",
+                    "site:{domain} intext:'confidential'"
+                ]
+            },
+            {
+                title: "🧠 Información Interna / IP",
+                queries: [
+                    "site:{domain} intext:'confidential'",
+                    "site:{domain} intext:'do not distribute'",
+                    "site:{domain} filetype:txt intext:'internal use only'"
+                ]
+            }
+        ];
+
+
+        function generateDorks() {
+            const domain = document.getElementById('domainInput').value.trim();
+            const output = document.getElementById('dorksOutput');
+            output.innerHTML = '';
+
+            if (!domain) return;
+
+            dorks.forEach((group) => {
+                const container = document.createElement('div');
+                container.className = 'dork-category';
+
+                const header = document.createElement('div');
+                header.className = 'category-header';
+                header.innerHTML = `${group.title} <span>+</span>`;
+                header.onclick = () => {
+                    const content = container.querySelector('.category-content');
+                    const icon = header.querySelector('span');
+                    if (content.style.display === 'block') {
+                        content.style.display = 'none';
+                        icon.textContent = '+';
+                    } else {
+                        content.style.display = 'block';
+                        icon.textContent = '−';
+                    }
+                };
+
+                const content = document.createElement('div');
+                content.className = 'category-content';
+
+                group.queries.forEach(query => {
+                    const finalQuery = query.replace(/{domain}/g, domain);
+
+                    const item = document.createElement('div');
+                    item.className = 'dork-item';
+                    item.onclick = () => {
+                        window.open(`https://www.google.com/search?q=${encodeURIComponent(finalQuery)}`, '_blank');
+                    };
+
+                    const text = document.createElement('div');
+                    text.className = 'dork-text';
+                    text.textContent = finalQuery;
+
+                    const copyBtn = document.createElement('button');
+                    copyBtn.textContent = '📋';
+                    copyBtn.onclick = e => {
+                        e.stopPropagation();
+                        navigator.clipboard.writeText(finalQuery);
+                        showNotification();
+                    };
+
+                    item.appendChild(text);
+                    item.appendChild(copyBtn);
+                    content.appendChild(item);
+                });
+
+                container.appendChild(header);
+                container.appendChild(content);
+                output.appendChild(container);
+            });
+        }
+
+        function showNotification() {
+            const note = document.getElementById('notification');
+            note.style.display = 'block';
+            setTimeout(() => {
+                note.style.display = 'none';
+            }, 1500);
+        }
+
+        function copyAll() {
+            const allText = Array.from(document.querySelectorAll('.dork-text'))
+                .map(el => el.textContent)
+                .join('\n');
+            if (allText) {
+                navigator.clipboard.writeText(allText);
+                showNotification();
+            }
+        }
+    </script>
+</body>
+
+</html>
